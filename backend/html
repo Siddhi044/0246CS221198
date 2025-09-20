@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>URL Shortener</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>URL Shortener</h2>
+    <form id="shorten-form">
+      <input type="url" id="long-url" placeholder="Enter long URL" required />
+      <button type="submit">Shorten</button>
+    </form>
+    <div id="result"></div>
+    <h3>All Shortened URLs</h3>
+    <ul id="urls-list"></ul>
+  </div>
+  <script>
+    const form = document.getElementById('shorten-form');
+    const longUrlInput = document.getElementById('long-url');
+    const resultDiv = document.getElementById('result');
+    const urlsList = document.getElementById('urls-list');
+
+    async function fetchUrls() {
+      const res = await fetch('http://localhost:8000/urls');
+      const urls = await res.json();
+      urlsList.innerHTML = '';
+      urls.forEach(u => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="http://localhost:8000/${u.code}" target="_blank">http://localhost:8000/${u.code}</a> → ${u.url}`;
+        urlsList.appendChild(li);
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultDiv.textContent = '';
+      try {
+        const res = await fetch('http://localhost:8000/shorten', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({url: longUrlInput.value})
+        });
+        const data = await res.json();
+        if (data.short_url) {
+          resultDiv.innerHTML = `<strong>Short URL:</strong> <a href="${data.short_url}" target="_blank">${data.short_url}</a>`;
+          longUrlInput.value = '';
+          fetchUrls();
+        } else {
+          resultDiv.textContent = 'Error: ' + (data.detail || 'Unable to shorten URL');
+        }
+      } catch {
+        resultDiv.textContent = 'Network error.';
+      }
+    });
+
+    fetchUrls();
+  </script>
+</body>
+</html>
