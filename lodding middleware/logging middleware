@@ -1,0 +1,19 @@
+const loggingMiddleware = (req, res, next) => {
+  const start = Date.now();
+
+  // Log incoming request
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} from ${req.ip}`);
+
+  // Hook into the response finish event to log after response is sent
+  res.on('finish', () => {
+    const elapsed = Date.now() - start;
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - ${res.statusCode} (${elapsed}ms)`
+    );
+  });
+
+  // Continue to next middleware or route handler
+  next();
+};
+
+module.exports = loggingMiddleware;
